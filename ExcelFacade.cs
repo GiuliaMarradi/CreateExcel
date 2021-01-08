@@ -114,59 +114,22 @@ namespace CreateExcel
                     {
                         string fieldName = fields[col];
                         PropertyInfo myf = obj1.GetType().GetProperty(fieldName);
-                        if (myf != null)
+                        if (myf != null && myf.GetValue(obj1, null) is object obj)
                         {
-                            object obj = myf.GetValue(obj1, null);
-                            if (obj != null)
+                            var headerText = headers[col].ToString();
+                            var c = obj switch
                             {
-                                if (obj.GetType() == typeof(string))
-                                {
-                                    // Cell c = CreateTextCell(headers[col].ToString(), obj.ToString(), index);
-                                    TextCell c = new TextCell(headers[col].ToString(), obj.ToString(), index);
-                                    r.Append(c);
-                                }
-                                else if (obj.GetType() == typeof(bool))
-                                {
-                                    string value = (bool)obj ? "Yes" : "No";
-                                    //Cell c = CreateTextCell(headers[col].ToString(), value, index);
-                                    TextCell c = new TextCell(headers[col].ToString(), value, index);
-                                    r.Append(c);
-                                }
-                                else if (obj.GetType() == typeof(DateTime))
-                                {
-                                    // stylesPart.Stylesheet is retrieved reference for the appropriate worksheet.
-                                    //Cell c = CreateDateCell(headers[col].ToString(), value, index, stylesPart.Stylesheet);
-                                    var c = new DateCell(headers[col].ToString(), (DateTime)obj, index);
-                                    r.Append(c);
-                                }
-                                else if (obj.GetType() == typeof(decimal) || obj.GetType() == typeof(double))
-                                {
-                                    //Cell c = CreateDecimalCell(headers[col].ToString(), obj.ToString(), index, stylesPart.Stylesheet);
-                                    FormatedNumberCell c = new FormatedNumberCell(headers[col].ToString(), obj.ToString(), index);
-                                    r.Append(c);
-                                }
-                                else
-                                {
-                                    if (long.TryParse(obj.ToString(), out _))
-                                    {
-                                        //Cell c = CreateIntegerCell(headers[col].ToString(), obj.ToString(), index);
-                                        NumberCell c = new NumberCell(headers[col].ToString(), obj.ToString(), index);
-                                        r.Append(c);
-                                    }
-                                    //else if (double.TryParse(obj.ToString(), out _))
-                                    //{
-                                    //    NumberCell c = new NumberCell(headers[col].ToString(), obj.ToString(), index);
-                                    //    r.Append(c);
-                                    //}
-                                    else
-                                    {
-                                        //Cell c = CreateTextCell(headers[col].ToString(), obj.ToString(), index);
-                                        TextCell c = new TextCell(headers[col].ToString(), obj.ToString(), index);
+                                string str => (Cell)new TextCell(headerText, str, index),
+                                bool b => new TextCell(headerText, b ? "Yes" : "No", index),
+                                DateTime dt => new DateCell(headerText, dt, index),
+                                decimal d => new FormatedNumberCell(headerText, d, index),
+                                double dbl => new FormatedNumberCell(headerText, dbl, index),
+                                int @int => new NumberCell(headerText, @int, index),
+                                long @long=> new NumberCell(headerText, @long, index),
+                                _ => new TextCell(headerText, obj.ToString(), index)
+                            };
 
-                                        r.Append(c);
-                                    }
-                                }
-                            }
+                            r.Append(c);
                         }
                     }
 
