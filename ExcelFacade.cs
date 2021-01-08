@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
+using DocumentFormat.OpenXml.Validation;
 
 namespace CreateExcel
 {
@@ -71,7 +73,9 @@ namespace CreateExcel
 
                 myWorkbook.WorkbookPart.Workbook = workbook;
                 myWorkbook.WorkbookPart.Workbook.Save();
-                myWorkbook.Close();
+
+                var validator = new OpenXmlValidator();
+                var result = validator.Validate(myWorkbook);
             }
         }
 
@@ -130,12 +134,9 @@ namespace CreateExcel
                                 }
                                 else if (obj.GetType() == typeof(DateTime))
                                 {
-                                    //string value = GetExcelSerialDate((DateTime) obj).ToString();
-                                    string value = ((DateTime)obj).ToOADate().ToString();
-
                                     // stylesPart.Stylesheet is retrieved reference for the appropriate worksheet.
                                     //Cell c = CreateDateCell(headers[col].ToString(), value, index, stylesPart.Stylesheet);
-                                    DateCell c = new DateCell(headers[col].ToString(), (DateTime)obj, index);
+                                    var c = new DateCell(headers[col].ToString(), (DateTime)obj, index);
                                     r.Append(c);
                                 }
                                 else if (obj.GetType() == typeof(decimal) || obj.GetType() == typeof(double))
@@ -146,13 +147,17 @@ namespace CreateExcel
                                 }
                                 else
                                 {
-                                    long value;
-                                    if (long.TryParse(obj.ToString(), out value))
+                                    if (long.TryParse(obj.ToString(), out _))
                                     {
                                         //Cell c = CreateIntegerCell(headers[col].ToString(), obj.ToString(), index);
                                         NumberCell c = new NumberCell(headers[col].ToString(), obj.ToString(), index);
                                         r.Append(c);
                                     }
+                                    //else if (double.TryParse(obj.ToString(), out _))
+                                    //{
+                                    //    NumberCell c = new NumberCell(headers[col].ToString(), obj.ToString(), index);
+                                    //    r.Append(c);
+                                    //}
                                     else
                                     {
                                         //Cell c = CreateTextCell(headers[col].ToString(), obj.ToString(), index);
@@ -199,7 +204,7 @@ namespace CreateExcel
                                 Console.WriteLine(formula);
 
                                 //c = CreateFomulaCell(headers[col].ToString(), formula, index, stylesPart.Stylesheet);
-                                FomulaCell c = new FomulaCell(headers[col].ToString(), formula, index);
+                                var c = new FomulaCell(headers[col].ToString(), formula, index);
                                 c.StyleIndex = 9;
                                 total.Append(c);
                             }
