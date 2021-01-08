@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 
@@ -29,14 +30,18 @@ namespace CreateExcel
 
                 ExcelFacade excelFacade = new ExcelFacade();
                 excelFacade.Create<Package>(@"C:\temp\output1.xlsx", packages, "Packages", headerNames);
-
+                var psi = new ProcessStartInfo
+                {
+                    FileName = @"C:\temp\output1.xlsx",
+                    UseShellExecute = true
+                };
+                Process.Start(psi);
                 Console.WriteLine("Completed");
             }
             catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
             }
-            Console.Read();
         }
     }
     public class Package

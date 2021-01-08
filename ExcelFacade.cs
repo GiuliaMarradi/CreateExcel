@@ -9,6 +9,8 @@ using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
 using DocumentFormat.OpenXml.Validation;
 
+using static CreateExcel.CellUtils;
+
 namespace CreateExcel
 {
     public class ExcelFacade
@@ -99,7 +101,7 @@ namespace CreateExcel
                 for (int col = 0; col < numCols; col++)
                 {
                     //Cell c = CreateHeaderCell(headers[col].ToString(), headerNames[col], index, stylesPart.Stylesheet);
-                    HeaderCell c = new HeaderCell(headers[col].ToString(), headerNames[col], index, stylesPart.Stylesheet, System.Drawing.Color.DodgerBlue, 12, true);
+                    var c = CreateHeaderCell(headers[col].ToString(), headerNames[col], index, stylesPart.Stylesheet, System.Drawing.Color.DodgerBlue, 12, true);
                     header.Append(c);
                 }
                 sheetData.Append(header);
@@ -119,14 +121,14 @@ namespace CreateExcel
                             var headerText = headers[col].ToString();
                             var c = obj switch
                             {
-                                string str => (Cell)new TextCell(headerText, str, index),
-                                bool b => new TextCell(headerText, b ? "Yes" : "No", index),
-                                DateTime dt => new DateCell(headerText, dt, index),
-                                decimal d => new FormatedNumberCell(headerText, d, index),
-                                double dbl => new FormatedNumberCell(headerText, dbl, index),
-                                int @int => new NumberCell(headerText, @int, index),
-                                long @long => new NumberCell(headerText, (decimal)@long, index),
-                                _ => new TextCell(headerText, obj.ToString(), index)
+                                string str => CreateTextCell(headerText, str, index),
+                                bool b => CreateTextCell(headerText, b ? "Yes" : "No", index),
+                                DateTime dt => CreateDateCell(headerText, dt, index),
+                                decimal d => CreateFormattedNumberCell(headerText, d, index),
+                                double dbl => CreateFormattedNumberCell(headerText, dbl, index),
+                                int @int => CreateNumberCell(headerText, @int, index),
+                                long @long => CreateNumberCell(headerText, (decimal)@long, index),
+                                _ => CreateTextCell(headerText, obj.ToString(), index)
                             };
 
                             r.Append(c);
@@ -154,7 +156,7 @@ namespace CreateExcel
                             if (col == 0)
                             {
                                 //c = CreateTextCell(headers[col].ToString(), "Total", index);
-                                TextCell c = new TextCell(headers[col].ToString(), "Total", index);
+                                var c = CreateTextCell(headers[col].ToString(), "Total", index);
                                 c.StyleIndex = 10;
                                 total.Append(c);
                             }
@@ -167,13 +169,13 @@ namespace CreateExcel
                                 Console.WriteLine(formula);
 
                                 //c = CreateFomulaCell(headers[col].ToString(), formula, index, stylesPart.Stylesheet);
-                                var c = new FomulaCell(headers[col].ToString(), formula, index);
+                                var c = CreateFomulaCell(headers[col].ToString(), formula, index);
                                 c.StyleIndex = 9;
                                 total.Append(c);
                             }
                             else
                             {
-                                TextCell c = new TextCell(headers[col].ToString(), string.Empty, index);
+                                var c = CreateTextCell(headers[col].ToString(), string.Empty, index);
                                 c.StyleIndex = 10;
                                 total.Append(c);
                             }
@@ -187,113 +189,7 @@ namespace CreateExcel
 
             return sheetData;
         }
-
-        private Cell CreateIntegerCell(string header, string text, int index)
-        {
-            Cell c = new Cell();
-            c.DataType = CellValues.Number;
-            c.CellReference = header + index;
-
-            CellValue v = new CellValue();
-            v.Text = text;
-            c.AppendChild(v);
-            return c;
-        }
-
-        private Cell CreateDecimalCell(string header, string text, int index, Stylesheet styles)
-        {
-            Cell c = new Cell();
-            c.DataType = CellValues.Number;
-            c.CellReference = header + index;
-            UInt32Value fontId = CreateFont(styles, "Arial", 11, false, System.Drawing.Color.Black);
-            UInt32Value fillId = CreateFill(styles, System.Drawing.Color.White);
-            UInt32Value formatId = CreateCellFormat(styles, fontId, fillId, 171);
-            c.StyleIndex = formatId;
-
-            CellValue v = new CellValue();
-            v.Text = text;
-            c.AppendChild(v);
-            return c;
-        }
-
-        private Cell CreateFomulaCell(string header, string formula, int index, Stylesheet styles)
-        {
-            Cell c = new Cell();
-            c.DataType = CellValues.Number;
-            c.CellReference = header + index;
-            UInt32Value fontId = CreateFont(styles, "Arial", 11, false, System.Drawing.Color.Black);
-            UInt32Value fillId = CreateFill(styles, System.Drawing.Color.White);
-            UInt32Value formatId = CreateCellFormat(styles, fontId, fillId, 171);
-            c.StyleIndex = formatId;
-
-            CellFormula f = new CellFormula();
-            f.CalculateCell = true;
-            f.Text = formula;
-            c.Append(f);
-
-            CellValue v = new CellValue();
-            c.AppendChild(v);
-            return c;
-        }
-
-
-        private Cell CreateDateCell(string header, string text, int index, Stylesheet styles)
-        {
-            Cell c = new Cell();
-            c.DataType = CellValues.Date;
-            c.CellReference = header + index;
-
-            UInt32Value fontId = CreateFont(styles, "Arial", 11, false, System.Drawing.Color.Black);
-            UInt32Value fillId = CreateFill(styles, System.Drawing.Color.White);
-            UInt32Value formatId = CreateCellFormat(styles, fontId, fillId, 14);
-            c.StyleIndex = formatId;
-
-            CellValue v = new CellValue();
-            v.Text = text;
-            c.CellValue = v;
-
-
-            return c;
-        }
-
-        private Cell CreateTextCell(string header, string text, int index)
-        {
-
-            //Create a new inline string cell.
-            Cell c = new Cell();
-            c.DataType = CellValues.InlineString;
-            c.CellReference = header + index;
-
-            //Add text to the text cell.
-            InlineString inlineString = new InlineString();
-            Text t = new Text();
-            t.Text = text;
-            inlineString.AppendChild(t);
-            c.AppendChild(inlineString);
-            return c;
-        }
-
-        private Cell CreateHeaderCell(string header, string text, int index, Stylesheet styles)
-        {
-            //Create a new inline string cell.
-            Cell c = new Cell();
-            c.DataType = CellValues.InlineString;
-            c.CellReference = header + index;
-            Console.WriteLine(header + index);
-
-            UInt32Value fontId = CreateFont(styles, "Arial", 12, true, System.Drawing.Color.Black);
-            UInt32Value fillId = CreateFill(styles, System.Drawing.Color.ForestGreen);
-            UInt32Value formatId = CreateCellFormat(styles, fontId, fillId, 0);
-            c.StyleIndex = formatId;
-
-            //Add text to the text cell.
-            InlineString inlineString = new InlineString();
-            Text t = new Text();
-            t.Text = text;
-            inlineString.AppendChild(t);
-            c.AppendChild(inlineString);
-            return c;
-        }
+     
         private List<string> GetPropertyInfo<T>()
         {
 
