@@ -8,13 +8,6 @@ namespace CreateExcel
 {
     public class NumberCell : Cell
     {
-        public NumberCell(string header, long value, int index)
-        {
-            this.DataType = CellValues.Number;
-            this.CellReference = header + index;
-            this.CellValue = new CellValue(value.ToString());
-        }
-
         public NumberCell(string header, int value, int index)
         {
             this.DataType = CellValues.Number;

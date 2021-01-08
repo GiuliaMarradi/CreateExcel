@@ -125,7 +125,7 @@ namespace CreateExcel
                                 decimal d => new FormatedNumberCell(headerText, d, index),
                                 double dbl => new FormatedNumberCell(headerText, dbl, index),
                                 int @int => new NumberCell(headerText, @int, index),
-                                long @long=> new NumberCell(headerText, @long, index),
+                                long @long => new NumberCell(headerText, (decimal)@long, index),
                                 _ => new TextCell(headerText, obj.ToString(), index)
                             };
 
