@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Text;
 using DocumentFormat.OpenXml;
@@ -7,17 +8,20 @@ using DocumentFormat.OpenXml.Spreadsheet;
 
 namespace CreateExcel
 {
-    public class HeaderCell : TextCell
+    public static partial class CellUtils
     {
-        public HeaderCell(string header, string text, int index, Stylesheet styles,
+        public static Cell CreateHeaderCell(string header, string text, int index, Stylesheet styles,
             System.Drawing.Color fillColour, double? fontSize, bool isBold)
-            : base(header, text, index)
         {
+            var cell = CreateTextCell(header, text, index);
+
             UInt32Value fontId = CreateFont(styles, "", fontSize, isBold, System.Drawing.Color.Black);
             UInt32Value fillId = CreateFill(styles, fillColour);
             UInt32Value formatId = CreateCellFormat(styles, fontId, fillId, 0);
-            this.StyleIndex = formatId;
 
+            cell.StyleIndex = formatId;
+
+            return cell;
         }
 
 
@@ -52,7 +56,11 @@ namespace CreateExcel
             Stylesheet styleSheet,
             System.Drawing.Color fillColor)
         {
-
+            var color = System.Drawing.Color.FromArgb(
+                                   fillColor.A,
+                                   fillColor.R,
+                                   fillColor.G,
+                                   fillColor.B);
 
             PatternFill patternFill =
                 new PatternFill(
@@ -60,13 +68,7 @@ namespace CreateExcel
                     {
                         Rgb = new HexBinaryValue()
                         {
-                            Value =
-                            System.Drawing.ColorTranslator.ToHtml(
-                                System.Drawing.Color.FromArgb(
-                                    fillColor.A,
-                                    fillColor.R,
-                                    fillColor.G,
-                                    fillColor.B)).Replace("#", "")
+                            Value = color.Name
                         }
                     });
 
@@ -116,18 +118,17 @@ namespace CreateExcel
                 font.Append(bold);
             }
 
+            var colorName = System.Drawing.Color.FromArgb(
+                                foreColor.A,
+                                foreColor.R,
+                                foreColor.G,
+                                foreColor.B).Name;
 
             Color color = new Color()
             {
                 Rgb = new HexBinaryValue()
                 {
-                    Value =
-                        System.Drawing.ColorTranslator.ToHtml(
-                            System.Drawing.Color.FromArgb(
-                                foreColor.A,
-                                foreColor.R,
-                                foreColor.G,
-                                foreColor.B)).Replace("#", "")
+                    Value = colorName
                 }
             };
             font.Append(color);
